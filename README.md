@@ -8,18 +8,18 @@ For large fleets (100+ devices), consider [Eclipse hawkBit](https://github.com/e
 
 ## Features
 
-- **Web Dashboard** — Upload bundles, activate releases, monitor devices
+- **Web Dashboard** — Upload bundles, activate releases, drag-and-drop support
 - **mTLS Authentication** — Secure device-to-server communication with client certificates
 - **REST API** — Simple JSON manifest for device polling
 - **Docker Deployment** — Single `docker compose up` to run
-- **Dark/Light Theme** — Modern, responsive UI
+- **Dark/Light Theme** — Modern, responsive UI with collapsible sidebar
 
 ## Quick Start
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourusername/rauc-simple-server.git
-cd rauc-simple-server
+git clone https://github.com/umair-uas/simple-ota-server.git
+cd simple-ota-server
 
 # Configure
 cp .env.example .env
@@ -85,11 +85,12 @@ curl --cert device.crt --key device.key --cacert ca.crt \
 Response:
 ```json
 {
-  "version": "1.2.0",
   "bundle_url": "https://<server>:8443/bundles/update-1.2.0.raucb",
   "compatible": "my-device-type",
+  "filename": "update-1.2.0.raucb",
+  "size": 52428800,
   "sha256": "abc123...",
-  "size": 52428800
+  "released_at": "2024-01-15T10:30:00"
 }
 ```
 
@@ -108,7 +109,7 @@ rauc install update-1.2.0.raucb
 
 ## Certificates
 
-Place TLS certificates in `certs/`:
+The server requires TLS certificates in `certs/`:
 
 | File | Purpose |
 |------|---------|
@@ -155,9 +156,9 @@ simple-ota-server/
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
 | `/` | GET | - | Dashboard |
-| `/api/v1/manifest.json` | GET | mTLS | Current release manifest |
-| `/api/bundles` | GET | - | List bundles |
-| `/api/devices` | GET | - | List tracked devices |
+| `/api/v1/manifest.json` | GET | mTLS | Current release manifest (for devices) |
+| `/api/manifest` | GET | - | Current release manifest (for dashboard) |
+| `/api/bundles` | GET | - | List all bundles |
 | `/bundles/{name}` | GET | mTLS | Download bundle |
 | `/upload` | POST | - | Upload bundle |
 | `/activate/{name}` | POST | - | Activate bundle |
@@ -169,7 +170,7 @@ simple-ota-server/
 For production, consider:
 
 1. **Reverse proxy** — Put behind nginx/traefik with proper TLS termination
-2. **Persistent storage** — Mount `bundles/` and `data/` to persistent volumes
+2. **Persistent storage** — Mount `data/` to a persistent volume
 3. **Backup** — Backup `data/manifest.json` and `certs/`
 4. **Monitoring** — Add health check monitoring on `/health`
 
