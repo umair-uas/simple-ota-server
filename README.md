@@ -2,17 +2,13 @@
 
 A lightweight OTA update server for [RAUC](https://rauc.io) with mTLS device authentication and a modern web dashboard.
 
-**Perfect for:** Small deployments, development/testing, or as a starting point for custom OTA infrastructure.
-
-For large fleets (100+ devices), consider [Eclipse hawkBit](https://github.com/eclipse/hawkbit) with [rauc-hawkbit-updater](https://github.com/rauc/rauc-hawkbit-updater).
-
 ## Features
 
 - **Web Dashboard** — Upload bundles, activate releases, drag-and-drop support
 - **mTLS Authentication** — Secure device-to-server communication with client certificates
 - **REST API** — Simple JSON manifest for device polling
 - **Docker Deployment** — Single `docker compose up` to run
-- **Dark/Light Theme** — Modern, responsive UI with collapsible sidebar
+- **Dark/Light Theme** — Modern, responsive UI
 
 ## Quick Start
 
@@ -25,7 +21,7 @@ cd simple-ota-server
 cp .env.example .env
 vim .env  # Set SERVER_URL and COMPATIBLE
 
-# Generate certificates (or use your own)
+# Generate certificates
 ./scripts/generate-certs.sh
 
 # Start
@@ -52,13 +48,6 @@ open http://localhost:8080
                     └─────────────────────────────────────────┘
 ```
 
-## Ports
-
-| Port | Protocol | Auth | Purpose |
-|------|----------|------|---------|
-| 8443 | HTTPS | mTLS (client cert) | Device API |
-| 8080 | HTTP | None | Admin dashboard |
-
 ## Configuration
 
 Edit `.env`:
@@ -72,8 +61,6 @@ COMPATIBLE=my-device-type
 ```
 
 ## Device Integration
-
-### Manifest API
 
 Devices poll the manifest endpoint to check for updates:
 
@@ -94,61 +81,24 @@ Response:
 }
 ```
 
-### Install Update
-
-With RAUC's HTTP streaming (RAUC 1.7+):
+Install with RAUC:
 ```bash
 rauc install https://<server>:8443/bundles/update-1.2.0.raucb
 ```
 
-Or download first:
-```bash
-curl -O https://<server>:8443/bundles/update-1.2.0.raucb
-rauc install update-1.2.0.raucb
-```
-
 ## Certificates
 
-The server requires TLS certificates in `certs/`:
-
-| File | Purpose |
-|------|---------|
-| `ca.crt` | CA certificate (verifies device client certs) |
-| `ca.key` | CA private key (signs device certs) |
-| `server.crt` | Server certificate |
-| `server.key` | Server private key |
-
-### Generate Development Certificates
+Generate development certificates:
 
 ```bash
 ./scripts/generate-certs.sh
 ```
 
-### Generate Device Certificates
+Generate device certificates:
 
 ```bash
 ./scripts/generate-device-cert.sh <device-id>
 # Creates: certs/devices/<device-id>.crt, <device-id>.key
-```
-
-## Directory Structure
-
-```
-simple-ota-server/
-├── app/main.py           # FastAPI application
-├── static/index.html     # Dashboard UI
-├── config/nginx.conf     # Nginx configuration
-├── scripts/              # Certificate generation scripts
-├── certs/                # TLS certificates (gitignored)
-│   ├── ca.crt/key        # CA certificate
-│   ├── server.crt/key    # Server certificate
-│   └── devices/          # Device client certificates
-├── data/                 # Runtime data (gitignored)
-│   ├── manifest.json     # Current release
-│   └── bundles/          # RAUC bundle storage
-├── docker-compose.yml
-├── Dockerfile
-└── .env.example
 ```
 
 ## API Reference
@@ -156,42 +106,15 @@ simple-ota-server/
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
 | `/` | GET | - | Dashboard |
-| `/api/v1/manifest.json` | GET | mTLS | Current release manifest (for devices) |
-| `/api/manifest` | GET | - | Current release manifest (for dashboard) |
-| `/api/bundles` | GET | - | List all bundles |
+| `/api/v1/manifest.json` | GET | mTLS | Manifest for devices |
+| `/api/manifest` | GET | - | Manifest for dashboard |
+| `/api/bundles` | GET | - | List bundles |
 | `/bundles/{name}` | GET | mTLS | Download bundle |
 | `/upload` | POST | - | Upload bundle |
 | `/activate/{name}` | POST | - | Activate bundle |
 | `/delete/{name}` | POST | - | Delete bundle |
 | `/health` | GET | - | Health check |
 
-## Production Deployment
-
-For production, consider:
-
-1. **Reverse proxy** — Put behind nginx/traefik with proper TLS termination
-2. **Persistent storage** — Mount `data/` to a persistent volume
-3. **Backup** — Backup `data/manifest.json` and `certs/`
-4. **Monitoring** — Add health check monitoring on `/health`
-
-## Alternatives
-
-| Solution | Best For | Complexity |
-|----------|----------|------------|
-| **This project** | Small deployments, testing | Low |
-| [hawkBit](https://github.com/eclipse/hawkbit) | Large fleets, enterprise | High |
-| [Mender](https://mender.io) | Managed service | Medium |
-| [UpdateHub](https://updatehub.io) | Managed/self-hosted | Medium |
-
 ## License
 
-MIT License — See [LICENSE](LICENSE) for details.
-
-## Contributing
-
-Contributions welcome! Please open an issue or PR.
-
-## Related Projects
-
-- [RAUC](https://github.com/rauc/rauc) — The update framework this server supports
-- [rauc-hawkbit-updater](https://github.com/rauc/rauc-hawkbit-updater) — RAUC client for hawkBit
+MIT License
