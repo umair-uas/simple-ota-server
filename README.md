@@ -54,7 +54,7 @@ Edit `.env`:
 
 ```bash
 # URL devices use to download bundles (must be reachable from devices)
-SERVER_URL=https://192.168.1.100:8443
+SERVER_URL=https://ota-gw.local:8443
 
 # RAUC compatible string (must match device's /etc/rauc/system.conf)
 COMPATIBLE=my-device-type
@@ -88,11 +88,13 @@ rauc install https://<server>:8443/bundles/update-1.2.0.raucb
 
 ## Certificates
 
-Generate development certificates:
+Generate development certificates (stable DNS SAN + current IP SAN):
 
 ```bash
-./scripts/generate-certs.sh
+./scripts/generate-certs.sh certs ota-gw.local 192.168.0.193
 ```
+
+Ensure devices can resolve `ota-gw.local` (router DNS, mDNS, or `/etc/hosts`).
 
 Generate device certificates:
 
