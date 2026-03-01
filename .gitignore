@@ -3,6 +3,8 @@ data/
 
 # Certificates (generated locally)
 certs/
+*.key
+*.pem
 
 # Environment file
 .env

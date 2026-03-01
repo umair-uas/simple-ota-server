@@ -1,6 +1,6 @@
 #!/bin/bash
 # Generate a device client certificate signed by the CA
-set -e
+set -euo pipefail
 
 DEVICE_ID="${1:?Usage: $0 <device-id>}"
 CERTS_DIR="${2:-certs}"
@@ -29,6 +29,7 @@ openssl x509 -req -in "$DEVICES_DIR/$DEVICE_ID.csr" \
     -out "$DEVICES_DIR/$DEVICE_ID.crt" -days $DAYS_VALID -sha256
 
 rm -f "$DEVICES_DIR/$DEVICE_ID.csr" "$CERTS_DIR/ca.srl"
+chmod 0600 "$DEVICES_DIR/$DEVICE_ID.key"
 
 echo ""
 echo "==> Device certificate generated:"
