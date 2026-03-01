@@ -68,28 +68,56 @@ COMPATIBLE=my-device-type
 
 ## Certificates
 
-Generate server certificates (stable DNS SAN + current IP SAN):
+The CA is generated once and reused for all server and device certificates. Regenerating the CA invalidates every device certificate signed by it.
+
+### Quick setup (wrapper script)
 
 ```bash
+# Creates CA (if missing) + server cert in one command
 ./scripts/generate-certs.sh certs ota-gw.local 192.168.0.193
 ```
 
-If no IP is provided, the script auto-detects it. The DNS name is always included as a SAN, making certs resilient to IP changes.
+### Individual scripts
 
-Generate device certificates:
+**Generate CA** — run once, or when setting up a new deployment:
+
+```bash
+./scripts/generate-ca.sh certs              # generate new CA (no-op if exists)
+./scripts/generate-ca.sh certs --force       # regenerate (invalidates all device certs!)
+./scripts/generate-ca.sh certs --import /path/to/existing-ca  # import external CA
+```
+
+**Generate server certificate** — requires an existing CA:
+
+```bash
+./scripts/generate-server-cert.sh certs ota-gw.local 192.168.0.193
+# IP is auto-detected if omitted
+```
+
+**Generate device certificate** — requires an existing CA:
 
 ```bash
 ./scripts/generate-device-cert.sh <device-id>
 # Creates: certs/devices/<device-id>.crt, <device-id>.key
 ```
 
+**Verify certificate chain** — checks CA, server, and all device certs:
+
+```bash
+./scripts/verify-chain.sh certs
+# PASS  ca.crt (self-signed)
+# PASS  server.crt
+# PASS  devices/my-device.crt
+```
+
 ### DNS Resolution
 
-Devices must be able to resolve `ota-gw.local` to the server's IP. Options:
+The `mdns` sidecar container advertises `ota-gw.local` via Avahi/mDNS. This is best-effort — multicast DNS does not cross most consumer routers, and the sidecar requires host Avahi, D-Bus access, and an AppArmor exception (Linux-only).
 
-- **Router DNS** — Add a local DNS entry on your router
-- **mDNS** — Use Avahi/mDNS if your network supports it
-- **`/etc/hosts`** — Add `192.168.0.193 ota-gw.local` on each device
+Fallback options if mDNS isn't available on your network:
+
+- **Direct IP URL** — Set `SERVER_URL=https://<ip>:8443` in `.env` and include the IP in the cert SAN (the default scripts already do this)
+- **Router DNS** — Add a local DNS entry on your router pointing `ota-gw.local` to the server IP
 
 ## Device Integration
 
