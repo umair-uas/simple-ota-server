@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAUC Simple Server</title>
+    <title>RAUC OTA Server</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -11,7 +14,7 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#22c55e',
+                        primary: '#f59e0b',
                         danger: '#ef4444',
                     }
                 }
@@ -19,9 +22,83 @@
         }
     </script>
     <style>
+        :root {
+            --bg-page: #f5f7fa;
+            --bg-surface: #ffffff;
+            --bg-surface-2: #f8fafc;
+            --border-subtle: #e2e8f0;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+        }
+        html.dark {
+            --bg-page: #0b0f14;
+            --bg-surface: #121821;
+            --bg-surface-2: #1a222d;
+            --border-subtle: #2b3644;
+            --text-main: #e5edf7;
+            --text-muted: #aab7c9;
+        }
+        body {
+            font-family: "Inter", sans-serif;
+        }
+        h1, h2 {
+            font-family: "Space Grotesk", sans-serif;
+            letter-spacing: 0.01em;
+        }
+        html.dark body {
+            background:
+                radial-gradient(1200px 700px at 95% -10%, rgba(245, 158, 11, 0.16), transparent 45%),
+                radial-gradient(900px 500px at -10% 110%, rgba(245, 158, 11, 0.08), transparent 40%),
+                var(--bg-page) !important;
+            color: var(--text-main);
+        }
+        html.dark header,
+        html.dark aside,
+        html.dark section,
+        html.dark footer {
+            background: color-mix(in srgb, var(--bg-surface) 92%, transparent) !important;
+            border-color: var(--border-subtle) !important;
+        }
+        html.dark .dark\:bg-gray-900 {
+            background-color: var(--bg-surface) !important;
+        }
+        html.dark .dark\:bg-gray-800 {
+            background-color: var(--bg-surface-2) !important;
+        }
+        html.dark .dark\:bg-gray-700 {
+            background-color: #26303d !important;
+        }
+        html.dark .dark\:border-gray-800,
+        html.dark .dark\:border-gray-700,
+        html.dark .dark\:border-gray-600 {
+            border-color: var(--border-subtle) !important;
+        }
+        html.dark .dark\:text-white {
+            color: var(--text-main) !important;
+        }
+        html.dark .dark\:text-gray-400,
+        html.dark .dark\:text-gray-500,
+        html.dark .dark\:text-gray-300 {
+            color: var(--text-muted) !important;
+        }
+        html.dark .hover\:bg-gray-700:hover {
+            background-color: #2f3a48 !important;
+        }
+        html.dark .hover\:bg-gray-600:hover {
+            background-color: #3a4757 !important;
+        }
+        html.dark .bg-primary\/5 {
+            background-color: rgba(245, 158, 11, 0.12) !important;
+        }
+        html.dark .dark\:bg-primary\/10 {
+            background-color: rgba(245, 158, 11, 0.16) !important;
+        }
+        header, aside, section, footer {
+            backdrop-filter: blur(6px);
+        }
         .drop-zone.drag-over {
-            border-color: #22c55e !important;
-            background-color: rgba(34, 197, 94, 0.1) !important;
+            border-color: #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.1) !important;
         }
         .sidebar-open .sidebar-overlay {
             opacity: 1;
@@ -54,7 +131,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                 </svg>
             </div>
-            <h1 class="text-xl font-bold text-gray-900 dark:text-white">RAUC Simple Server</h1>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white">RAUC OTA Server</h1>
         </div>
         <div class="flex items-center gap-2 md:gap-3">
             <span id="compatible" class="px-2 md:px-3 py-1.5 bg-primary/10 text-primary text-xs md:text-sm font-medium rounded-lg truncate max-w-[120px] md:max-w-none">-</span>
@@ -80,7 +157,7 @@
         <div class="sidebar-overlay fixed inset-0 bg-black/50 z-20 opacity-0 pointer-events-none transition-opacity md:hidden" onclick="toggleSidebar()"></div>
 
         <!-- Left Panel -->
-        <aside class="sidebar w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col fixed md:relative inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
+        <aside class="sidebar w-72 flex-shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex flex-col fixed md:relative inset-y-0 left-0 z-30 transform -translate-x-full md:translate-x-0 transition-transform duration-200">
             <!-- Close button (mobile) -->
             <button onclick="toggleSidebar()" class="md:hidden absolute top-3 right-3 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                 <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,67 +185,95 @@
                             <span class="text-sm text-gray-600 dark:text-gray-300">Activate after upload</span>
                         </label>
                     </div>
-                    <button type="submit" id="upload-btn" disabled class="w-full px-4 py-2 bg-primary hover:bg-green-600 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-2">
+                    <button type="submit" id="upload-btn" disabled class="w-full px-4 py-2 bg-primary hover:bg-amber-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                         </svg>
                         <span id="upload-btn-text">Select a file</span>
                     </button>
+                    <p class="text-xs text-gray-500 dark:text-gray-300">Choose a `.raucb` file to enable upload.</p>
                 </form>
             </div>
 
-            <!-- Active Bundle Info -->
             <div class="p-4 flex-1 overflow-auto">
-                <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Active Bundle</h2>
-                <div class="space-y-3">
-                    <div>
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Filename</span>
-                        <p id="filename" class="font-mono text-sm text-gray-900 dark:text-white break-all">-</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Size</span>
-                            <p id="size" class="font-mono text-sm text-gray-900 dark:text-white">-</p>
-                        </div>
-                        <div>
-                            <span class="text-xs text-gray-500 dark:text-gray-400">Uploaded</span>
-                            <p id="released" class="font-mono text-sm text-gray-900 dark:text-white">-</p>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="text-xs text-gray-500 dark:text-gray-400">SHA256</span>
-                        <p id="sha256" class="font-mono text-xs text-gray-500 dark:text-gray-400 break-all">-</p>
-                    </div>
-                </div>
+                <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Tip</h2>
+                <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Bundle copy actions are in the bundle row. Use them directly after upload.
+                </p>
             </div>
 
-            <!-- Footer -->
-            <footer class="p-4 border-t border-gray-200 dark:border-gray-800">
-                <a href="https://github.com/umair-uas/simple-ota-server" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 text-gray-400 dark:text-gray-500 text-xs hover:text-primary transition">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                    View on GitHub
-                </a>
-            </footer>
         </aside>
 
         <!-- Right Panel - Bundles List -->
         <section class="flex-1 flex flex-col overflow-hidden bg-white dark:bg-gray-900">
+            <div class="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+                <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Active Bundle</h2>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 p-4 md:p-5">
+                    <div id="active-bundle-empty" class="py-6 text-center">
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-200">No active bundle yet</p>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">Upload and activate a `.raucb` bundle to generate install details.</p>
+                        <button onclick="openFilePicker()" class="mt-3 px-3 py-1.5 bg-primary hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition">Upload First Bundle</button>
+                    </div>
+                    <div id="active-bundle-fields" class="grid grid-cols-1 lg:grid-cols-2 gap-4 hidden">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Bundle Name</p>
+                            <p id="filename" class="mt-1 font-mono text-sm text-gray-900 dark:text-white break-all">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">SHA256</p>
+                            <p id="sha256" class="mt-1 font-mono text-xs text-gray-600 dark:text-gray-300 break-all">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Uploaded</p>
+                            <p id="released" class="mt-1 font-mono text-sm text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Size</p>
+                            <p id="size" class="mt-1 font-mono text-sm text-gray-900 dark:text-white">-</p>
+                        </div>
+                        <p class="lg:col-span-2 text-xs text-gray-500 dark:text-gray-300">
+                            Use the copy chips in <span class="font-semibold">Available Bundles</span> for bundle name and download URL.
+                        </p>
+                    </div>
+                </div>
+            </div>
             <div class="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-800">
                 <h2 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Available Bundles</h2>
             </div>
             <div id="bundles-container" class="flex-1 overflow-auto p-4 md:p-6"></div>
         </section>
     </main>
+    <footer class="flex-shrink-0 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 md:px-6 py-3">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-xs">
+            <div class="text-gray-500 dark:text-gray-400">
+                RAUC OTA Server helps manage and serve signed OTA bundles for embedded Linux devices.
+            </div>
+            <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400">
+                <span>Copyright © <span id="footer-year"></span> RAUC OTA Server</span>
+                <a href="https://github.com/umair-uas/simple-ota-server" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 hover:text-primary transition">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    GitHub Repository
+                </a>
+            </div>
+        </div>
+    </footer>
+    <div id="copy-toast" class="fixed bottom-4 right-4 z-50 px-3 py-2 rounded-lg bg-gray-900 text-white text-xs opacity-0 pointer-events-none transition-opacity duration-200"></div>
 
     <script>
         const $ = id => document.getElementById(id);
         const formatSize = bytes => bytes ? (bytes / 1024 / 1024).toFixed(2) + ' MB' : '-';
         const formatDate = iso => iso ? iso.slice(0, 16).replace('T', ' ') : '-';
+        const iconCopy = `
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V5a2 2 0 012-2h9a2 2 0 012 2v9a2 2 0 01-2 2h-2m-5 3H5a2 2 0 01-2-2V8a2 2 0 012-2h7a2 2 0 012 2v9a2 2 0 01-2 2z"/>
+            </svg>`;
 
         let currentManifest = {};
         let selectedFile = null;
+        let toastTimer = null;
+        $('footer-year').textContent = new Date().getFullYear();
 
         // Sidebar toggle
         function toggleSidebar() {
@@ -195,6 +300,12 @@
         const dropText = $('drop-text');
         const uploadBtn = $('upload-btn');
         const uploadBtnText = $('upload-btn-text');
+        function openFilePicker() {
+            if (window.innerWidth < 768) {
+                document.body.classList.add('sidebar-open');
+            }
+            fileInput.click();
+        }
 
         function updateFileSelection(file) {
             if (file && file.name.endsWith('.raucb')) {
@@ -240,7 +351,10 @@
         function renderManifest(m) {
             currentManifest = m;
             $('compatible').textContent = m.compatible || '-';
-            $('filename').textContent = m.filename || 'No bundle active';
+            const hasActiveBundle = !!m.filename;
+            $('active-bundle-empty').classList.toggle('hidden', hasActiveBundle);
+            $('active-bundle-fields').classList.toggle('hidden', !hasActiveBundle);
+            $('filename').textContent = m.filename || '-';
             $('size').textContent = formatSize(m.size);
             $('released').textContent = formatDate(m.released_at);
             $('sha256').textContent = m.sha256 || '-';
@@ -250,12 +364,15 @@
             const container = $('bundles-container');
             if (!bundles.length) {
                 container.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
-                        <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="h-full flex items-center justify-center">
+                        <div class="max-w-md w-full text-center rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-8 bg-gray-50 dark:bg-gray-800/40">
+                            <svg class="w-14 h-14 mx-auto mb-3 opacity-60 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                        </svg>
-                        <p class="text-lg font-medium">No bundles uploaded yet</p>
-                        <p class="text-sm mt-1">Upload a .raucb file to get started</p>
+                            </svg>
+                            <p class="text-lg font-medium text-gray-700 dark:text-gray-200">No bundles uploaded yet</p>
+                            <p class="text-sm mt-1 text-gray-500 dark:text-gray-300">Upload your first `.raucb` bundle to start OTA deployment.</p>
+                            <button onclick="openFilePicker()" class="mt-4 px-3 py-1.5 bg-primary hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition">Upload Bundle</button>
+                        </div>
                     </div>`;
                 return;
             }
@@ -263,12 +380,23 @@
                 <div class="grid gap-4">
                     ${bundles.map(b => {
                         const isActive = currentManifest.filename === b.name;
+                        const encodedName = encodeURIComponent(b.name);
+                        const safeName = JSON.stringify(b.name);
+                        const safeBundleUrl = JSON.stringify(bundleUrl(b.name));
                         return `
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border ${isActive ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'} hover:shadow-md transition gap-3">
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
                                         <span class="font-mono text-sm text-gray-900 dark:text-white break-all">${b.name}</span>
-                                        ${isActive ? '<span class="flex-shrink-0 px-2 py-0.5 bg-primary text-white text-xs font-medium rounded">ACTIVE</span>' : ''}
+                                        <button onclick='copyText(${safeName}, "Bundle name copied")' class="px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg transition inline-flex items-center gap-1" title="Copy bundle name">
+                                            ${iconCopy}
+                                            Name
+                                        </button>
+                                        <button onclick='copyText(${safeBundleUrl}, "Bundle URL copied")' class="px-2 py-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg transition inline-flex items-center gap-1" title="Copy bundle URL">
+                                            ${iconCopy}
+                                            URL
+                                        </button>
+                                        ${isActive ? '<span class="flex-shrink-0 px-2 py-0.5 bg-primary text-gray-900 text-xs font-semibold rounded">ACTIVE</span>' : ''}
                                     </div>
                                     <div class="flex items-center gap-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         <span>${formatSize(b.size)}</span>
@@ -276,18 +404,69 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <a href="/bundles/${b.name}" download class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg transition inline-flex items-center gap-1">
+                                    <a href="/bundles/${encodedName}" download class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-medium rounded-lg transition inline-flex items-center gap-1">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                                         </svg>
                                         Download
                                     </a>
-                                    ${!isActive ? `<button onclick="activateBundle('${b.name}')" class="px-3 py-1.5 bg-primary hover:bg-green-600 text-white text-xs font-medium rounded-lg transition">Activate</button>` : ''}
-                                    <button onclick="deleteBundle('${b.name}')" class="px-3 py-1.5 bg-danger hover:bg-red-600 text-white text-xs font-medium rounded-lg transition">Delete</button>
+                                    ${!isActive ? `<button onclick='activateBundle(${safeName})' class="px-3 py-1.5 bg-primary hover:bg-amber-500 text-white text-xs font-medium rounded-lg transition">Activate</button>` : ''}
+                                    <button onclick='deleteBundle(${safeName})' class="px-3 py-1.5 bg-danger hover:bg-red-600 text-white text-xs font-medium rounded-lg transition">Delete</button>
                                 </div>
                             </div>`;
                     }).join('')}
                 </div>`;
+        }
+
+        function publicBundleBaseUrl() {
+            const manifestBundleUrl = currentManifest.bundle_url;
+            if (manifestBundleUrl) {
+                try {
+                    const parsed = new URL(manifestBundleUrl);
+                    const marker = '/bundles/';
+                    const markerIdx = parsed.pathname.indexOf(marker);
+                    const prefixPath = markerIdx >= 0 ? parsed.pathname.slice(0, markerIdx + marker.length) : '/bundles/';
+                    return `${parsed.origin}${prefixPath}`.replace(/\/+$/, '/');
+                } catch (err) {
+                    // Fall through to dashboard origin fallback.
+                }
+            }
+            return `${window.location.origin}/bundles/`;
+        }
+
+        function bundleUrl(name) {
+            return `${publicBundleBaseUrl()}${encodeURIComponent(name)}`;
+        }
+
+        function showCopyToast(message) {
+            const toast = $('copy-toast');
+            toast.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 1300);
+        }
+
+        async function copyText(value, message = 'Copied') {
+            if (!value || value === '-') return;
+            try {
+                await navigator.clipboard.writeText(value);
+                showCopyToast(message);
+            } catch (err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = value;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyToast(message);
+            }
         }
 
         // API
@@ -307,13 +486,13 @@
         }
 
         async function activateBundle(name) {
-            await fetch(`/activate/${name}`, { method: 'POST' });
+            await fetch(`/activate/${encodeURIComponent(name)}`, { method: 'POST' });
             refreshData();
         }
 
         async function deleteBundle(name) {
             if (!confirm(`Delete ${name}?`)) return;
-            await fetch(`/delete/${name}`, { method: 'POST' });
+            await fetch(`/delete/${encodeURIComponent(name)}`, { method: 'POST' });
             refreshData();
         }
 
