@@ -129,6 +129,30 @@ def hash_file(filepath: Path, chunk_size: int = 8192) -> str:
     return sha256.hexdigest()
 
 
+def read_manifest_file(path: Path) -> Optional[dict]:
+    """Read manifest JSON file safely."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except Exception:
+        return None
+
+
+def any_manifest_references(filename: str) -> bool:
+    """Return true if any manifest references the bundle filename."""
+    for mf in MANIFESTS_DIR.glob('*.json'):
+        parsed = read_manifest_file(mf)
+        if parsed and parsed.get('filename') == filename:
+            return True
+
+    legacy_manifest = read_manifest_file(LEGACY_MANIFEST_FILE)
+    if legacy_manifest and legacy_manifest.get('filename') == filename:
+        return True
+
+    return False
+
+
 # =============================================================================
 # Device API (mTLS required - port 8443)
 # =============================================================================
@@ -282,18 +306,22 @@ async def delete_bundle(filename: str, compatible: Optional[str] = None):
     """Delete a bundle."""
     safe_filename = secure_filename(filename)
     filepath = BUNDLES_DIR / safe_filename
-    if filepath.exists():
+
+    resolved_compatible = normalize_compatible(compatible or DEFAULT_COMPATIBLE)
+    manifest_files = [manifest_path_for(resolved_compatible)]
+    if resolved_compatible == DEFAULT_COMPATIBLE:
+        manifest_files.append(LEGACY_MANIFEST_FILE)
+
+    # Clear active manifest for selected compatible only.
+    for manifest_file in manifest_files:
+        parsed = read_manifest_file(manifest_file)
+        if parsed and parsed.get('filename') == safe_filename:
+            manifest_file.unlink(missing_ok=True)
+
+    # Delete file only when no manifest still references it.
+    if filepath.exists() and not any_manifest_references(safe_filename):
         filepath.unlink()
-        resolved_compatible = normalize_compatible(compatible or DEFAULT_COMPATIBLE)
-        manifest_file = manifest_path_for(resolved_compatible)
-        if manifest_file.exists():
-            try:
-                if json.loads(manifest_file.read_text()).get('filename') == safe_filename:
-                    manifest_file.unlink()
-                    if resolved_compatible == DEFAULT_COMPATIBLE and LEGACY_MANIFEST_FILE.exists():
-                        LEGACY_MANIFEST_FILE.unlink()
-            except Exception:
-                pass
+
     return RedirectResponse(url='/', status_code=303)
 
 
